@@ -11,9 +11,10 @@ from prettytable import PrettyTable
 # ------------------------------
 # USER CONFIGURATION
 # ------------------------------
+GITHUB_PAT=input("Enter your GitHub PAT: ")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "YOUR_PAT_HERE")  # Best practice: use environment variable
-OWNER = "uzair-codes"  # Replace with your GitHub username/org
-REPO = "Automated-Node-Health-Check"  # Replace with repo name
+OWNER = input("Enter GitHub Username/org: ")  # Replace with your GitHub username/org
+REPO = input("Enter repo name: ")  # Replace with repo name
 
 # ------------------------------
 # API Setup

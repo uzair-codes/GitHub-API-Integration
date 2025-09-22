@@ -1,39 +1,45 @@
 #!/bin/bash
 
-github-api="https://api.github.com"
-owner=$1
-reponame=$2
+# GitHub API base URL
+GITHUB_API="https://api.github.com"
 
-function helper{
-	if [ $# -ne 2 ]
-	then
-		echo "Usage: $0 owner repo-name"
-		exit 1
-	fi
+# Helper function: shows usage instructions if wrong input is given
+function helper() {
+    echo "Usage: $0 <owner> <repo-name>"
+    echo "Example: $0 uzair-codes AWS-Resource-Tracker"
+    exit 1
 }
 
-function call-github {
-url="${github-api}/repos/$owner/$reponame/collaborators"
-
-collaborators= "$(curl -s -u "${username}:${token}" "url") | jq -r '.[] | select(.permission.pulls==true) | .login'"
-
-if [ -z "$collaborators" ]
-then
-	echo "No users with read access found for ${owner}/${reponame}"
-else
-	echo "User with read access to ${owner}/${reponame}:"
-	echo "$collaborators"
+# Validate input arguments
+if [ $# -ne 2 ]; then
+    helper
 fi
+
+OWNER=$1
+REPO=$2
+
+# Prompt user for GitHub credentials (username + PAT)
+read -p "Enter your GitHub username: " USERNAME
+read -s -p "Enter your GitHub Personal Access Token: " TOKEN
+echo ""
+
+# Function to call GitHub API and fetch collaborators with read access
+function call_github() {
+    URL="${GITHUB_API}/repos/${OWNER}/${REPO}/collaborators"
+
+    RESPONSE=$(curl -s -u "${USERNAME}:${TOKEN}" "$URL")
+
+    # Extract collaborators with pull access
+    COLLABORATORS=$(echo "$RESPONSE" | jq -r '.[] | select(.permissions.pull==true) | .login')
+
+    if [ -z "$COLLABORATORS" ]; then
+        echo -e "\033[31mNo users with read access found for ${OWNER}/${REPO}\033[0m"
+    else
+        echo -e "\033[32mUsers with read access to ${OWNER}/${REPO}:\033[0m"
+        echo "$COLLABORATORS"
+    fi
 }
 
-# Validate Arguments
-helper "$@"
-
-# Main Script
-
-echo " Listing Users with read access to ${owner}/${reponame}..."
-
-call-github
-
-
-
+# Main Execution
+echo "🔍 Fetching collaborators for ${OWNER}/${REPO}..."
+call_github

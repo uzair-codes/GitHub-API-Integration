@@ -1,34 +1,39 @@
 #!/usr/bin/env python3
 """
-GitHub API Integration
-Fetch repository details, open issues, and contributors.
+GitHub API Integration Script (Fixed Version)
+Author: Uzair
+Date: 2025-09-22
+Description: Fetch GitHub repo info, issues, contributors with authentication.
 """
 
 import requests
-import os
 from prettytable import PrettyTable
 
 # ------------------------------
-# USER CONFIGURATION
+# Get user input
 # ------------------------------
-GITHUB_PAT=input("Enter your GitHub PAT: ")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "YOUR_PAT_HERE")  # Best practice: use environment variable
-OWNER = input("Enter GitHub Username/org: ")  # Replace with your GitHub username/org
-REPO = input("Enter repo name: ")  # Replace with repo name
+GITHUB_TOKEN = input("Enter your GitHub PAT: ").strip()
+OWNER = input("Enter GitHub Username/org: ").strip()
+REPO = input("Enter repo name: ").strip()
 
 # ------------------------------
 # API Setup
 # ------------------------------
 BASE_URL = "https://api.github.com"
-HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"}
-
+HEADERS = {
+    "Authorization": f"token {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
 
 def fetch_repo_info():
     url = f"{BASE_URL}/repos/{OWNER}/{REPO}"
     response = requests.get(url, headers=HEADERS)
+    if response.status_code == 401:
+        print("❌ Authentication failed! Check your PAT.")
+        print("🔑 Go to https://github.com/settings/tokens to create a valid PAT with 'repo' and 'read:user' scopes.")
+        exit(1)
     response.raise_for_status()
     return response.json()
-
 
 def fetch_open_issues():
     url = f"{BASE_URL}/repos/{OWNER}/{REPO}/issues"
@@ -36,13 +41,11 @@ def fetch_open_issues():
     response.raise_for_status()
     return response.json()
 
-
 def fetch_contributors():
     url = f"{BASE_URL}/repos/{OWNER}/{REPO}/contributors"
     response = requests.get(url, headers=HEADERS)
     response.raise_for_status()
     return response.json()
-
 
 def generate_report():
     print("\n📊 GitHub Repository Report")
@@ -58,11 +61,13 @@ def generate_report():
     table = PrettyTable(["Issue #", "Title", "State", "Created By"])
     table.align = "l"
     for issue in issues:
-        # GitHub API returns PRs as well in /issues endpoint, filter them out
-        if "pull_request" not in issue:
+        if "pull_request" not in issue:  # filter PRs
             table.add_row([issue["number"], issue["title"], issue["state"], issue["user"]["login"]])
     print("\n🔧 Open Issues:")
-    print(table)
+    if table.rowcount > 0:
+        print(table)
+    else:
+        print("✅ No open issues found.")
 
     # 3. Contributors Table
     contributors = fetch_contributors()
@@ -72,7 +77,6 @@ def generate_report():
         contrib_table.add_row([contrib["login"], contrib["contributions"]])
     print("\n👥 Contributors:")
     print(contrib_table)
-
 
 if __name__ == "__main__":
     generate_report()

@@ -4,7 +4,7 @@
 GITHUB_API="https://api.github.com"
 
 # Helper function: shows usage instructions if wrong input is given
-function helper() {
+helper() {
     echo "Usage: $0 <owner> <repo-name>"
     echo "Example: $0 uzair-codes AWS-Resource-Tracker"
     exit 1
@@ -24,7 +24,7 @@ read -s -p "Enter your GitHub Personal Access Token: " TOKEN
 echo ""
 
 # Function to call GitHub API and fetch collaborators with read access
-function call_github() {
+call_github() {
     URL="${GITHUB_API}/repos/${OWNER}/${REPO}/collaborators"
 
     RESPONSE=$(curl -s -u "${USERNAME}:${TOKEN}" "$URL")
